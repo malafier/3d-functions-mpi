@@ -57,16 +57,15 @@ class ParallelTrapezoidStrategy(CalculationStrategy):
         n_per_process = self.n // size
         h_x = (self.x_end - self.x_start) / self.n
         h_y = (self.y_end - self.y_start) / self.n
-        local_sum = 0
 
+        local_sum = 0
         x_local_start = self.x_start + rank * n_per_process * h_x
-        y_local_start = self.y_start + rank * n_per_process * h_y
         for i in range(n_per_process):
-            for j in range(n_per_process):
+            for j in range(self.n):
                 x_1 = x_local_start + i * h_x
                 x_2 = x_local_start + (i + 1) * h_x
-                y_1 = y_local_start + j * h_y
-                y_2 = y_local_start + (j + 1) * h_y
+                y_1 = self.y_start + j * h_y
+                y_2 = self.y_start + (j + 1) * h_y
 
                 z_1, z_2, z_3, z_4 = fun(x_1, y_1), fun(x_2, y_1), fun(x_1, y_2), fun(x_2, y_2)
                 local_sum += (z_1 + z_2 + z_3 + z_4) / 4 * h_x * h_y
