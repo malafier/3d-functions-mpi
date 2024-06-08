@@ -3,6 +3,15 @@ import tkinter as tk
 from tkinter import ttk
 
 
+def input_not_valid(a_val, b_val):
+    if not a_val or not b_val:
+        return True
+    a, b = float(a_val), float(b_val)
+    if a > b:
+        return True
+    return False
+
+
 class App:
     def __init__(self):
         self.root = tk.Tk()
@@ -158,6 +167,15 @@ class App:
         n_value = self.n_entry.get()
         n_processes_value = self.n_spinbox.get()
         selected_method = self.method_dropdown.get()
+
+        if input_not_valid(ax_value, bx_value) or input_not_valid(ay_value, by_value):
+            self.result_values[0].config(text="Err")
+            self.result_values[1].config(text="Err")
+            self.result_values[2].config(text="0 s")
+            self.result_values[3].config(text="0 s")
+            self.speedup_value_label.config(text="Err")
+            self.efficiency_value_label.config(text="Err")
+            return
 
         sequential_args = ["python3", "main.py"]
         parallel_args = ["mpirun", "-np", n_processes_value, "python3", "main.py"]

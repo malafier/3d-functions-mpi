@@ -55,7 +55,7 @@ class ParallelTrapezoidStrategy(CalculationStrategy):
         size = self.comm.Get_size()
 
         n_per_process = self.n // size
-        if rank == 0:
+        if rank == size - 1:
             n_per_process += self.n % size
         h_x = (self.x_end - self.x_start) / self.n
         h_y = (self.y_end - self.y_start) / self.n
