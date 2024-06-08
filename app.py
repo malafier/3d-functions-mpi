@@ -36,15 +36,20 @@ class App:
         self.function_dropdown.grid_configure(columnspan=3, sticky="ew")
 
         self.spinbox_values = {}
-        inputs = [("ax:", 2), ("bx:", 2), ("ay:", 3), ("by:", 3)]
-        for idx, (label_text, row_number) in enumerate(inputs):
+        inputs = [
+            ("a\u2093", "ax", 2),
+            ("a\u1D67", "ay", 2),
+            ("b\u2093", "bx", 3),
+            ("b\u1D67", "by", 3),
+        ]
+        for idx, (label_text, label_key, row_number) in enumerate(inputs):
             label = ttk.Label(frame, text=label_text)
             label.grid(row=row_number, column=idx % 2 * 2, sticky=tk.E, padx=5, pady=5)
             spinbox = ttk.Spinbox(frame, from_=-1000, to=1000, increment=0.1, width=5)
             spinbox.grid(
                 row=row_number, column=idx % 2 * 2 + 1, sticky=tk.W, padx=5, pady=5
             )
-            self.spinbox_values[label_text.strip(":")] = spinbox
+            self.spinbox_values[label_key] = spinbox
 
         frame3 = ttk.Frame(frame)
         frame3.grid(row=4, column=0, columnspan=4, padx=5, pady=5)
