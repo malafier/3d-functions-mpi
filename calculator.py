@@ -1,5 +1,7 @@
 import math
 from abc import ABC, abstractmethod
+
+import numpy as np
 from mpi4py import MPI
 
 
@@ -88,9 +90,31 @@ class ParallelTrapezoidStrategy(CalculationStrategy):
 
 class SequentialMonteCarloStrategy(CalculationStrategy):
     def calculate(self, fun):
-        pass
+        xlist = np.random.uniform(low=self.x_start, high=self.x_end, size=self.n)
+        ylist = np.random.uniform(low=self.y_start, high=self.y_end, size=self.n)
+        value_sum = sum([fun(x, y) for x, y in zip(xlist, ylist)])
+        result = (self.x_end - self.x_start) * (self.y_end - self.y_start) / self.n * value_sum
+        return result
 
 
 class ParallelMonteCarloStrategy(CalculationStrategy):
     def calculate(self, fun):
-        pass
+        rank = self.comm.Get_rank()
+        size = self.comm.Get_size()
+
+        n_local = self.n // size
+        if rank < self.n % size:
+            n_local += 1
+
+        xlist = np.random.uniform(low=self.x_start, high=self.x_end, size=n_local)
+        ylist = np.random.uniform(low=self.y_start, high=self.y_end, size=n_local)
+
+        value_sum_local = sum([fun(x, y) for x, y in zip(xlist, ylist)])
+
+        value_sum = self.comm.reduce(value_sum_local, op=MPI.SUM, root=0)
+
+        if rank == 0:
+            result = (self.x_end - self.x_start) * (self.y_end - self.y_start) / self.n * value_sum
+            return result
+        else:
+            return None
