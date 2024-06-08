@@ -17,16 +17,6 @@ def schwefel_fun(x, y):
     return 418.9829 * 2 - (x * math.sin(math.sqrt(abs(x))) + y * math.sin(math.sqrt(abs(y))))
 
 
-def trapezoid_integral(x_start, y_start, fun, h_x, h_y, i, j):
-    x_1 = x_start + i * h_x
-    x_2 = x_start + (i + 1) * h_x
-    y_1 = y_start + j * h_y
-    y_2 = y_start + (j + 1) * h_y
-
-    z_1, z_2, z_3, z_4 = fun(x_1, y_1), fun(x_2, y_1), fun(x_1, y_2), fun(x_2, y_2)
-    return (z_1 + z_2 + z_3 + z_4) / 4 * h_x * h_y
-
-
 class CalculationStrategy(ABC):
     def __init__(self, x_start, x_end, y_start, y_end, n):
         self.comm = MPI.COMM_WORLD
@@ -49,7 +39,13 @@ class SequentialTrapezoidStrategy(CalculationStrategy):
         result = 0
         for i in range(self.n):
             for j in range(self.n):
-                result += trapezoid_integral(self.x_start, self.y_start, fun, h_x, h_y, i, j)
+                x_1 = self.x_start + i * h_x
+                x_2 = self.x_start + (i + 1) * h_x
+                y_1 = self.y_start + j * h_y
+                y_2 = self.y_start + (j + 1) * h_y
+
+                z_1, z_2, z_3, z_4 = fun(x_1, y_1), fun(x_2, y_1), fun(x_1, y_2), fun(x_2, y_2)
+                result += (z_1 + z_2 + z_3 + z_4) / 4 * h_x * h_y
         return result
 
 
@@ -58,34 +54,26 @@ class ParallelTrapezoidStrategy(CalculationStrategy):
         rank = self.comm.Get_rank()
         size = self.comm.Get_size()
 
+        n_per_process = self.n // size
+        if rank == 0:
+            n_per_process += self.n % size
         h_x = (self.x_end - self.x_start) / self.n
         h_y = (self.y_end - self.y_start) / self.n
-        result = 0
 
-        if rank == 0:
-            n_per_process = self.n // size
-            for i in range(1, size):
-                self.comm.send([
-                    self.x_start + i * n_per_process * h_x,
-                    self.y_start + i * n_per_process * h_y,
-                    n_per_process
-                ], dest=i, tag=1)
+        local_sum = 0
+        x_local_start = self.x_start + rank * n_per_process * h_x
+        for i in range(n_per_process):
+            for j in range(self.n):
+                x_1 = x_local_start + i * h_x
+                x_2 = x_local_start + (i + 1) * h_x
+                y_1 = self.y_start + j * h_y
+                y_2 = self.y_start + (j + 1) * h_y
 
-            for i in range(n_per_process):
-                for j in range(n_per_process):
-                    result += trapezoid_integral(self.x_start, self.y_start, fun, h_x, h_y, i, j)
+                z_1, z_2, z_3, z_4 = fun(x_1, y_1), fun(x_2, y_1), fun(x_1, y_2), fun(x_2, y_2)
+                local_sum += (z_1 + z_2 + z_3 + z_4) / 4 * h_x * h_y
 
-            for i in range(1, size):
-                result += self.comm.recv(source=i, tag=2)
-
-            return result
-        else:
-            x_start, y_start, n = self.comm.recv(source=0, tag=1)
-            local_result = 0
-            for i in range(n):
-                for j in range(n):
-                    local_result += trapezoid_integral(x_start, y_start, fun, h_x, h_y, i, j)
-            self.comm.send(local_result, dest=0, tag=2)
+        result = self.comm.reduce(local_sum, op=MPI.SUM, root=0)
+        return result if rank == 0 else None
 
 
 class SequentialMonteCarloStrategy(CalculationStrategy):
