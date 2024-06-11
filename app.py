@@ -15,6 +15,16 @@ def input_not_valid(a_val, b_val):
         return True
 
 
+def value_not_valid(value):
+    if not value:
+        return True
+    try:
+        int(value)
+        return False
+    except ValueError:
+        return True
+
+
 class App:
     def __init__(self):
         self.root = tk.Tk()
@@ -127,14 +137,14 @@ class App:
 
     @staticmethod
     def _prepare_args(
-        selected_function,
-        ax_value,
-        bx_value,
-        ay_value,
-        by_value,
-        n_value,
-        selected_method,
-        is_sequential=True,
+            selected_function,
+            ax_value,
+            bx_value,
+            ay_value,
+            by_value,
+            n_value,
+            selected_method,
+            is_sequential=True,
     ):
         args = []
 
@@ -171,7 +181,8 @@ class App:
         n_processes_value = self.n_spinbox.get()
         selected_method = self.method_dropdown.get()
 
-        if input_not_valid(ax_value, bx_value) or input_not_valid(ay_value, by_value):
+        if (input_not_valid(ax_value, bx_value) or input_not_valid(ay_value, by_value)
+                or value_not_valid(n_value) or value_not_valid(n_processes_value)):
             self.result_values[0].config(text="Err")
             self.result_values[1].config(text="Err")
             self.result_values[2].config(text="0 s")
