@@ -1,6 +1,6 @@
 import subprocess
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 
 def input_not_valid(a_val, b_val):
@@ -29,7 +29,7 @@ class App:
     def __init__(self):
         self.root = tk.Tk()
 
-        self.root.geometry("1000x800")
+        self.root.geometry("600x650")
         self.root.resizable(False, False)
         self.root.title("Całkowanie numeryczne 3D")
 
@@ -189,6 +189,7 @@ class App:
             self.result_values[3].config(text="0 s")
             self.speedup_value_label.config(text="Err")
             self.efficiency_value_label.config(text="Err")
+            messagebox.showerror("Błąd", "Niepoprawny format danych!")
             return
 
         sequential_args = ["python3", "main.py"]
