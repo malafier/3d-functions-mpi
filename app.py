@@ -6,10 +6,13 @@ from tkinter import ttk
 def input_not_valid(a_val, b_val):
     if not a_val or not b_val:
         return True
-    a, b = float(a_val), float(b_val)
-    if a > b:
+    try:
+        a, b = float(a_val), float(b_val)
+        if a > b:
+            return True
+        return False
+    except ValueError:
         return True
-    return False
 
 
 class App:
